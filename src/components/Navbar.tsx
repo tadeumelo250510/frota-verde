@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppUser } from '../types';
-import { Crown, Shield, Briefcase } from 'lucide-react';
+import { Crown, Shield, Briefcase, Database } from 'lucide-react';
 
 export type NavTab =
   | 'dashboard'
@@ -59,6 +59,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right side: Active User Badge & Sair Button */}
         <div className="flex items-center gap-2 ml-auto">
+          {/* Supabase Status Indicator */}
+          <div
+            title="Conexão com Supabase Ativa"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-[11px] font-semibold"
+          >
+            <Database className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Supabase</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          </div>
+
           {currentUser && (
             <div
               className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold ${

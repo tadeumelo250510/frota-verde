@@ -17,6 +17,17 @@ import {
   calculateRefuelsWithMetrics,
   calculateVehiclesEfficiency,
 } from './utils/calculations';
+import {
+  fetchRemoteVehicles,
+  fetchRemoteRefuels,
+  fetchRemoteUsers,
+  syncVehicleToRemote,
+  deleteVehicleFromRemote,
+  syncRefuelToRemote,
+  deleteRefuelFromRemote,
+  syncUserToRemote,
+  deleteUserFromRemote,
+} from './lib/supabaseSync';
 import { LogOut, RotateCcw, X } from 'lucide-react';
 
 const STORAGE_KEYS = {
@@ -229,6 +240,34 @@ export default function App() {
     }
   }, [users]);
 
+  // Sincronização inicial com Supabase
+  useEffect(() => {
+    let isMounted = true;
+    async function loadFromSupabase() {
+      const [remoteVehicles, remoteRefuels, remoteUsers] = await Promise.all([
+        fetchRemoteVehicles(),
+        fetchRemoteRefuels(),
+        fetchRemoteUsers(),
+      ]);
+
+      if (!isMounted) return;
+
+      if (remoteVehicles && remoteVehicles.length > 0) {
+        setVehicles(remoteVehicles);
+      }
+      if (remoteRefuels && remoteRefuels.length > 0) {
+        setRecords(remoteRefuels);
+      }
+      if (remoteUsers && remoteUsers.length > 0) {
+        setUsers(remoteUsers);
+      }
+    }
+    loadFromSupabase();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Cálculos reativos
   const enrichedRecords = useMemo(
     () => calculateRefuelsWithMetrics(records, vehicles),
@@ -248,6 +287,7 @@ export default function App() {
       createdAt: new Date().toISOString(),
     };
     setVehicles((prev) => [newVehicle, ...prev]);
+    syncVehicleToRemote(newVehicle);
   };
 
   const handleDeleteVehicle = (vehicleId: string) => {
@@ -258,6 +298,7 @@ export default function App() {
 
     if (window.confirm(confirmMessage)) {
       setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+      deleteVehicleFromRemote(vehicleId);
     }
   };
 
@@ -281,10 +322,12 @@ export default function App() {
       createdAt: new Date().toISOString(),
     };
     setRecords((prev) => [newRecord, ...prev]);
+    syncRefuelToRemote(newRecord);
   };
 
   const handleDeleteRecord = (recordId: string) => {
     setRecords((prev) => prev.filter((r) => r.id !== recordId));
+    deleteRefuelFromRemote(recordId);
   };
 
   // Manipuladores de Usuários
@@ -294,25 +337,40 @@ export default function App() {
       id: `usr-${Date.now()}`,
     };
     setUsers((prev) => [...prev, newUser]);
+    syncUserToRemote(newUser);
   };
 
   const handleDeleteUser = (userId: string) => {
     setUsers((prev) => prev.filter((u) => u.id !== userId));
+    deleteUserFromRemote(userId);
   };
 
   const handleUpdateUser = (userId: string, updatedData: Partial<AppUser>) => {
     setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, ...updatedData } : u))
+      prev.map((u) => {
+        if (u.id === userId) {
+          const updated = { ...u, ...updatedData };
+          syncUserToRemote(updated);
+          return updated;
+        }
+        return u;
+      })
     );
   };
 
   const handleToggleUserStatus = (userId: string) => {
     setUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId
-          ? { ...u, status: u.status === 'Ativo' ? 'Inativo' : 'Ativo' }
-          : u
-      )
+      prev.map((u) => {
+        if (u.id === userId) {
+          const updated: AppUser = {
+            ...u,
+            status: u.status === 'Ativo' ? 'Inativo' : 'Ativo',
+          };
+          syncUserToRemote(updated);
+          return updated;
+        }
+        return u;
+      })
     );
   };
 
