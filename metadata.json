@@ -1,0 +1,6 @@
+{
+  "name": "Controle de Abastecimento",
+  "description": "Aplicativo para controle de abastecimento, cálculo de consumo médio por km, relatórios mensais de combustível e eficiência por placa antiga e Mercosul.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
