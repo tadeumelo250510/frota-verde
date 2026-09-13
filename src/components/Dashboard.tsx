@@ -202,7 +202,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       const stat = efficiencyStats.find((s) => s.vehicleId === selectedVehicleId);
       if (stat && stat.averageKmL > 0) return stat.averageKmL;
     }
-    return 3.33; // Fallback padrão alinhado com os dados do mock se sem delta
+    return 0;
   }, [filteredEnriched, totalLiters, selectedVehicleId, efficiencyStats]);
 
   // Dados para os Gráficos de Rosca (Donut)

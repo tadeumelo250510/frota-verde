@@ -1,109 +1,11 @@
 import { Vehicle, RefuelRecord, AppUser } from '../types';
 
-export const INITIAL_VEHICLES: Vehicle[] = [
-  {
-    id: 'veh-1',
-    brand: 'Volkswagen',
-    model: 'Gol 1.6 MSI Flex',
-    year: 2022,
-    plate: 'GDM-5A45',
-    plateType: 'mercosul',
-    fuelTypeDefault: 'Gasolina Comum',
-    targetKmL: 11.5,
-    initialOdometer: 100000,
-    cityState: 'SP - SÃO PAULO',
-    color: 'Prata Sirius',
-    createdAt: '2026-08-01T10:00:00.000Z',
-  },
-  {
-    id: 'veh-2',
-    brand: 'Chevrolet',
-    model: 'Onix Plus 1.0 Turbo',
-    year: 2023,
-    plate: 'RRD-2C34',
-    plateType: 'mercosul',
-    fuelTypeDefault: 'Gasolina Comum',
-    targetKmL: 13.5,
-    initialOdometer: 50000,
-    cityState: 'MG - BELO HORIZONTE',
-    color: 'Branco Summit',
-    createdAt: '2026-08-05T14:30:00.000Z',
-  },
-  {
-    id: 'veh-3',
-    brand: 'Fiat',
-    model: 'Strada 1.4 Hard Working',
-    year: 2018,
-    plate: 'ABC-1234',
-    plateType: 'antigo',
-    fuelTypeDefault: 'Gasolina Comum',
-    targetKmL: 11.0,
-    initialOdometer: 85200,
-    cityState: 'SP - CAMPINAS',
-    color: 'Vermelho Alpine',
-    createdAt: '2026-08-10T09:00:00.000Z',
-  },
-];
+// Zero dados fictícios ou sementes de exemplo
+export const INITIAL_VEHICLES: Vehicle[] = [];
 
-export const INITIAL_REFUELS: RefuelRecord[] = [
-  {
-    id: 'ref-1',
-    vehicleId: 'veh-1', // GDM-5A45
-    date: '2026-09-11',
-    odometer: 100865,
-    liters: 130.0,
-    pricePerLiter: 5.38,
-    totalCost: 700.0,
-    fuelType: 'Gasolina Comum',
-    isFullTank: true,
-    stationName: 'Posto Petrobras Central',
-    notes: 'Abastecimento quinzenal da rota norte',
-    createdAt: '2026-09-11T10:00:00.000Z',
-  },
-  {
-    id: 'ref-2',
-    vehicleId: 'veh-1', // GDM-5A45
-    date: '2026-09-10',
-    odometer: 100432,
-    liters: 130.0,
-    pricePerLiter: 5.38,
-    totalCost: 700.0,
-    fuelType: 'Gasolina Comum',
-    isFullTank: true,
-    stationName: 'Posto Shell Rodoanel',
-    notes: 'Saída para entregas',
-    createdAt: '2026-09-10T09:30:00.000Z',
-  },
-  {
-    id: 'ref-3',
-    vehicleId: 'veh-2', // RRD-2C34
-    date: '2026-09-09',
-    odometer: 50600,
-    liters: 120.0,
-    pricePerLiter: 5.0,
-    totalCost: 600.0,
-    fuelType: 'Gasolina Comum',
-    isFullTank: true,
-    stationName: 'Posto Ipiranga Express',
-    notes: 'Fechamento de rota sul',
-    createdAt: '2026-09-09T16:15:00.000Z',
-  },
-  {
-    id: 'ref-4',
-    vehicleId: 'veh-2', // RRD-2C34
-    date: '2026-09-08',
-    odometer: 50200,
-    liters: 120.0,
-    pricePerLiter: 5.0,
-    totalCost: 600.0,
-    fuelType: 'Gasolina Comum',
-    isFullTank: true,
-    stationName: 'Posto Ipiranga Express',
-    notes: 'Início de jornada',
-    createdAt: '2026-09-08T08:00:00.000Z',
-  },
-];
+export const INITIAL_REFUELS: RefuelRecord[] = [];
 
+// Usuário legítimo ROOT do sistema
 export const INITIAL_USERS: AppUser[] = [
   {
     id: 'usr-root',
@@ -118,43 +20,5 @@ export const INITIAL_USERS: AppUser[] = [
     status: 'Ativo',
     createdAt: '2026-09-01T08:00:00.000Z',
   },
-  {
-    id: 'usr-1',
-    name: 'Carlos Mendes',
-    cpf: '234.567.890-11',
-    email: 'carlos.mendes@frota.com.br',
-    phone: '(11) 99123-4567',
-    role: 'Gestor de Frota',
-    password: 'senha123',
-    isRoot: false,
-    vehicleAssigned: 'Todos',
-    status: 'Ativo',
-    createdAt: '2026-09-02T09:00:00.000Z',
-  },
-  {
-    id: 'usr-2',
-    name: 'João Pedro Silva',
-    cpf: '345.678.901-22',
-    email: 'joao.silva@frota.com.br',
-    phone: '(11) 98234-5678',
-    role: 'Gestor de Frota',
-    password: 'senha123',
-    isRoot: false,
-    vehicleAssigned: 'Todos',
-    status: 'Ativo',
-    createdAt: '2026-09-03T10:00:00.000Z',
-  },
-  {
-    id: 'usr-3',
-    name: 'Ana Carolina Santos',
-    cpf: '456.789.012-33',
-    email: 'ana.santos@frota.com.br',
-    phone: '(11) 97345-6789',
-    role: 'Administrador',
-    password: 'senha123',
-    isRoot: false,
-    vehicleAssigned: 'Todos',
-    status: 'Ativo',
-    createdAt: '2026-09-04T11:00:00.000Z',
-  },
 ];
+

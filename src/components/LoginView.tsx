@@ -210,7 +210,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLoginSuccess }) =
             </label>
             <input
               type="text"
-              placeholder="059.958.485-85 ou e-mail"
+              placeholder="CPF ou E-mail"
               value={cpf}
               onChange={(e) => {
                 const val = e.target.value;
@@ -342,20 +342,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLoginSuccess }) =
                   <div className="relative">
                     <input
                       type="email"
-                      placeholder="ex: tadeumotog5plus@gmail.com"
+                      placeholder="ex: seuemail@dominio.com"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#15803d]/30 focus:border-[#15803d]"
                     />
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  </div>
-                </div>
-
-                <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
-                  💡 <strong>Dica:</strong> Para contas de teste, você pode informar:
-                  <div className="mt-1 text-slate-700 font-mono text-[10px]">
-                    • tadeumotog5plus@gmail.com (Root)<br />
-                    • carlos.mendes@frota.com.br
                   </div>
                 </div>
 

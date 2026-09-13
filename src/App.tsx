@@ -31,11 +31,11 @@ import {
 import { LogOut, RotateCcw, X } from 'lucide-react';
 
 const STORAGE_KEYS = {
-  VEHICLES: 'combustivel_veiculos_v2',
-  REFUELS: 'combustivel_abastecimentos_v2',
-  USERS: 'combustivel_usuarios_v2',
-  IS_AUTH: 'combustivel_is_authenticated_v2',
-  ACTIVE_USER: 'combustivel_active_user_id_v2',
+  VEHICLES: 'combustivel_veiculos_v3',
+  REFUELS: 'combustivel_abastecimentos_v3',
+  USERS: 'combustivel_usuarios_v3',
+  IS_AUTH: 'combustivel_is_authenticated_v3',
+  ACTIVE_USER: 'combustivel_active_user_id_v3',
 };
 
 export default function App() {
@@ -53,32 +53,13 @@ export default function App() {
     return INITIAL_VEHICLES;
   });
 
-  // Inicialização de Abastecimentos
+  // Inicialização de Abastecimentos (estritamente real, sem mocks)
   const [records, setRecords] = useState<RefuelRecord[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.REFUELS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Ajusta registros legados com datas futuras de dados de exemplo
-          return parsed.map((r: RefuelRecord) => {
-            if (r.id === 'ref-3' && r.date === '2026-09-13') {
-              return {
-                ...r,
-                date: '2026-09-09',
-                createdAt: '2026-09-09T16:15:00.000Z',
-              };
-            }
-            if (r.id === 'ref-1' && r.createdAt === '2026-09-12T14:00:00.000Z') {
-              return {
-                ...r,
-                date: '2026-09-11',
-                createdAt: '2026-09-11T10:00:00.000Z',
-              };
-            }
-            return r;
-          });
-        }
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.warn('Erro ao carregar abastecimentos:', e);
@@ -485,7 +466,7 @@ export default function App() {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Você pode encerrar a sessão de <strong>{currentUser.name}</strong> e retornar à tela de login com CPF, ou restaurar os dados do modelo inicial.
+              Você pode encerrar a sessão de <strong>{currentUser.name}</strong> e retornar à tela de login com CPF, ou limpar todos os registros locais para iniciar do zero.
             </p>
 
             <div className="space-y-2 pt-2">
@@ -501,10 +482,10 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleResetData}
-                className="w-full py-2 px-4 rounded-lg bg-[#15803d] hover:bg-[#166534] text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-4 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" />
-                Restaurar Dados do Modelo
+                Limpar Cache Local e Resetar
               </button>
 
               <button
