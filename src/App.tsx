@@ -27,6 +27,7 @@ import {
   deleteRefuelFromRemote,
   syncUserToRemote,
   deleteUserFromRemote,
+  subscribeToSupabaseRealtime,
 } from './lib/supabaseSync';
 import { LogOut, X } from 'lucide-react';
 
@@ -196,7 +197,10 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  // Persistência local
+  // Estado do Realtime
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+
+  // Persistência em cache no localStorage (apenas cache local, sem sobrescrever nuvem)
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify(vehicles));
@@ -221,7 +225,7 @@ export default function App() {
     }
   }, [users]);
 
-  // Sincronização inicial com Supabase
+  // Carga inicial do Supabase (Banco de dados principal)
   useEffect(() => {
     let isMounted = true;
     async function loadFromSupabase() {
@@ -233,19 +237,104 @@ export default function App() {
 
       if (!isMounted) return;
 
-      if (remoteVehicles && remoteVehicles.length > 0) {
-        setVehicles(remoteVehicles);
+      // Se retornou da nuvem (mesmo array vazio se limpo), Supabase é a autoridade máxima
+      if (remoteVehicles !== null) {
+        if (remoteVehicles.length > 0) {
+          setVehicles(remoteVehicles);
+        } else {
+          // Se a tabela no Supabase estiver completamente vazia, inicializa com os veículos padrão no Supabase
+          INITIAL_VEHICLES.forEach((v) => syncVehicleToRemote(v));
+          setVehicles(INITIAL_VEHICLES);
+        }
       }
-      if (remoteRefuels && remoteRefuels.length > 0) {
+
+      if (remoteRefuels !== null) {
         setRecords(remoteRefuels);
       }
-      if (remoteUsers && remoteUsers.length > 0) {
-        setUsers(remoteUsers);
+
+      if (remoteUsers !== null) {
+        if (remoteUsers.length > 0) {
+          setUsers(remoteUsers);
+        } else {
+          // Se a tabela de usuários estiver vazia no Supabase, sobe o usuário Root para a nuvem
+          INITIAL_USERS.forEach((u) => syncUserToRemote(u));
+          setUsers(INITIAL_USERS);
+        }
       }
     }
+
     loadFromSupabase();
+
     return () => {
       isMounted = false;
+    };
+  }, []);
+
+  // Assinatura Realtime do Supabase para INSERT, UPDATE e DELETE instantâneos entre PCs
+  useEffect(() => {
+    const unsubscribe = subscribeToSupabaseRealtime({
+      onStatusChange: (status) => {
+        setIsRealtimeConnected(status === 'SUBSCRIBED');
+      },
+      onVehicleChange: ({ eventType, newRecord, oldRecord }) => {
+        if (eventType === 'INSERT' && newRecord) {
+          setVehicles((prev) => {
+            if (prev.some((v) => v.id === newRecord.id)) {
+              return prev.map((v) => (v.id === newRecord.id ? newRecord : v));
+            }
+            return [newRecord, ...prev];
+          });
+        } else if (eventType === 'UPDATE' && newRecord) {
+          setVehicles((prev) =>
+            prev.map((v) => (v.id === newRecord.id ? newRecord : v))
+          );
+        } else if (eventType === 'DELETE' && oldRecord) {
+          setVehicles((prev) => prev.filter((v) => v.id !== oldRecord.id));
+        }
+      },
+      onRefuelChange: ({ eventType, newRecord, oldRecord }) => {
+        if (eventType === 'INSERT' && newRecord) {
+          setRecords((prev) => {
+            if (prev.some((r) => r.id === newRecord.id)) {
+              return prev.map((r) => (r.id === newRecord.id ? newRecord : r));
+            }
+            return [newRecord, ...prev];
+          });
+        } else if (eventType === 'UPDATE' && newRecord) {
+          setRecords((prev) =>
+            prev.map((r) => (r.id === newRecord.id ? newRecord : r))
+          );
+        } else if (eventType === 'DELETE' && oldRecord) {
+          setRecords((prev) => prev.filter((r) => r.id !== oldRecord.id));
+        }
+      },
+      onUserChange: ({ eventType, newRecord, oldRecord }) => {
+        if (eventType === 'INSERT' && newRecord) {
+          setUsers((prev) => {
+            if (prev.some((u) => u.id === newRecord.id)) {
+              return prev.map((u) => (u.id === newRecord.id ? newRecord : u));
+            }
+            return [...prev, newRecord];
+          });
+        } else if (eventType === 'UPDATE' && newRecord) {
+          setUsers((prev) =>
+            prev.map((u) => (u.id === newRecord.id ? newRecord : u))
+          );
+          // Se o usuário atual foi atualizado (ex: troca de senha em outro PC), atualiza currentUser
+          setCurrentUser((current) => {
+            if (current && current.id === newRecord.id) {
+              return newRecord;
+            }
+            return current;
+          });
+        } else if (eventType === 'DELETE' && oldRecord) {
+          setUsers((prev) => prev.filter((u) => u.id !== oldRecord.id));
+        }
+      },
+    });
+
+    return () => {
+      unsubscribe();
     };
   }, []);
 
@@ -378,6 +467,7 @@ export default function App() {
           currentUser={currentUser}
           onSelectTab={(tab) => setCurrentTab(tab)}
           onLogoutClick={() => setIsLogoutModalOpen(true)}
+          isRealtimeConnected={isRealtimeConnected}
         />
 
         {/* Conteúdo da Aba Ativa */}

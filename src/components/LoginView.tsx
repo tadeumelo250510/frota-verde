@@ -96,16 +96,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLoginSuccess, onU
     onLoginSuccess(userFound);
   };
 
-  // Preenchimento Automático de Teste para o Administrador Root
-  const handleFillTestCredentials = () => {
-    const rootUser = users.find((u) => u.isRoot) || users[0];
-    if (rootUser) {
-      setCpf(rootUser.cpf || '059.958.485-85');
-      setPassword(rootUser.password || '250510');
-      setError('');
-    }
-  };
-
   // Abrir modal de esqueci a senha
   const handleOpenForgotModal = () => {
     setIsForgotModalOpen(true);
@@ -273,15 +263,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLoginSuccess, onU
             className="w-full py-3 px-4 rounded-xl bg-[#15803d] hover:bg-[#166534] text-white font-bold text-sm sm:text-base shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
           >
             <span>Entrar no Sistema</span>
-          </button>
-
-          {/* Botão Preencher CPF/Senha Teste */}
-          <button
-            type="button"
-            onClick={handleFillTestCredentials}
-            className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs sm:text-sm transition-colors cursor-pointer"
-          >
-            Preencher CPF/Senha Teste
           </button>
         </form>
 

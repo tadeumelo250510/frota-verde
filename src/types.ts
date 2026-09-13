@@ -112,3 +112,23 @@ export interface MonthlyReportSummary {
   }[];
   records: RefuelWithCalculations[];
 }
+
+export type AuditActionType = 'CRIAR' | 'EDITAR' | 'EXCLUIR' | 'STATUS';
+export type AuditEntityType = 'Veículo' | 'Abastecimento' | 'Usuário';
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string; // ISO string
+  action: AuditActionType;
+  entityType: AuditEntityType;
+  entityId: string;
+  entityDescription: string; // ex: "Placa GDM5A45 (Toyota Corolla)" ou "Abastecimento #ref-123" ou "João da Silva (Gestor)"
+  performedBy: {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    isRoot?: boolean;
+  };
+  details?: string; // ex: "Alterou status para Inativo", "Registrou 45L a R$ 5,89", etc.
+}

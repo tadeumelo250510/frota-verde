@@ -8,13 +8,15 @@ export type NavTab =
   | 'lancar-abastecimento'
   | 'extrato'
   | 'gerenciar-usuarios'
-  | 'relatorio-pdf';
+  | 'relatorio-pdf'
+  | 'auditoria-operacoes';
 
 interface NavbarProps {
   currentTab: NavTab;
   currentUser?: AppUser;
   onSelectTab: (tab: NavTab) => void;
   onLogoutClick: () => void;
+  isRealtimeConnected?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,14 +24,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   onSelectTab,
   onLogoutClick,
+  isRealtimeConnected = true,
 }) => {
-  const tabs: { id: NavTab; label: string }[] = [
+  const tabs: { id: NavTab; label: string; rootOnly?: boolean }[] = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'cadastrar-veiculo', label: 'Cadastrar Veículo' },
     { id: 'lancar-abastecimento', label: 'Lançar Abastecimento' },
     { id: 'extrato', label: 'Extrato' },
     { id: 'gerenciar-usuarios', label: 'Gerenciar Usuários' },
     { id: 'relatorio-pdf', label: 'Relatório PDF' },
+    ...(currentUser?.isRoot
+      ? [{ id: 'auditoria-operacoes' as NavTab, label: 'Auditoria (Root)', rootOnly: true }]
+      : []),
   ];
 
   return (
@@ -61,12 +67,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2 ml-auto">
           {/* Supabase Status Indicator */}
           <div
-            title="Conexão com Supabase Ativa"
-            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-[11px] font-semibold"
+            title={isRealtimeConnected ? 'Supabase Conectado & Realtime Ativo' : 'Supabase Sincronizando...'}
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
+              isRealtimeConnected
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                : 'border-amber-200 bg-amber-50 text-amber-800'
+            }`}
           >
-            <Database className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Supabase</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <Database className={`w-3.5 h-3.5 ${isRealtimeConnected ? 'text-emerald-600' : 'text-amber-600'}`} />
+            <span>{isRealtimeConnected ? 'Supabase Realtime' : 'Supabase'}</span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isRealtimeConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400 animate-ping'
+              }`}
+            ></span>
           </div>
 
           {currentUser && (
