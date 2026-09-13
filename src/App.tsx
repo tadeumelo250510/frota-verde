@@ -28,7 +28,7 @@ import {
   syncUserToRemote,
   deleteUserFromRemote,
 } from './lib/supabaseSync';
-import { LogOut, RotateCcw, X } from 'lucide-react';
+import { LogOut, X } from 'lucide-react';
 
 const STORAGE_KEYS = {
   VEHICLES: 'combustivel_veiculos_v3',
@@ -355,21 +355,17 @@ export default function App() {
     );
   };
 
-  // Restaurar dados originais do modelo
-  const handleResetData = () => {
-    setVehicles(INITIAL_VEHICLES);
-    setRecords(INITIAL_REFUELS);
-    setUsers(INITIAL_USERS);
-    localStorage.removeItem(STORAGE_KEYS.VEHICLES);
-    localStorage.removeItem(STORAGE_KEYS.REFUELS);
-    localStorage.removeItem(STORAGE_KEYS.USERS);
-    setIsLogoutModalOpen(false);
-    setCurrentTab('dashboard');
-  };
-
   // Se o usuário não estiver autenticado, exibe a tela de Login exclusiva via CPF
   if (!isAuthenticated) {
-    return <LoginView users={users} onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <LoginView
+        users={users}
+        onLoginSuccess={handleLoginSuccess}
+        onUpdateUserPassword={(userId, newPass) => {
+          handleUpdateUser(userId, { password: newPass });
+        }}
+      />
+    );
   }
 
   return (
@@ -447,14 +443,14 @@ export default function App() {
         </main>
       </div>
 
-      {/* Modal de Saída / Restaurar Dados */}
+      {/* Modal de Saída */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-lg space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-800 font-bold">
                 <LogOut className="w-5 h-5 text-red-600" />
-                <span>Sessão & Dados</span>
+                <span>Encerrar Sessão</span>
               </div>
               <button
                 type="button"
@@ -466,7 +462,7 @@ export default function App() {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Você pode encerrar a sessão de <strong>{currentUser.name}</strong> e retornar à tela de login com CPF, ou limpar todos os registros locais para iniciar do zero.
+              Deseja realmente encerrar a sessão de <strong>{currentUser.name}</strong> e retornar à tela de login? Seus dados continuam gravados com segurança.
             </p>
 
             <div className="space-y-2 pt-2">
@@ -477,15 +473,6 @@ export default function App() {
               >
                 <LogOut className="w-4 h-4" />
                 Encerrar Sessão (Ir para Login com CPF)
-              </button>
-
-              <button
-                type="button"
-                onClick={handleResetData}
-                className="w-full py-2 px-4 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Limpar Cache Local e Resetar
               </button>
 
               <button

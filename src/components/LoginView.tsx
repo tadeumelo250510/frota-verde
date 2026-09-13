@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AppUser } from '../types';
 import { formatCpf } from '../utils/cpfValidator';
+import { syncUserToRemote } from '../lib/supabaseSync';
 import {
   Truck,
   Eye,
@@ -18,9 +19,10 @@ import {
 interface LoginViewProps {
   users: AppUser[];
   onLoginSuccess: (user: AppUser) => void;
+  onUpdateUserPassword?: (userId: string, newPass: string) => void;
 }
 
-export const LoginView: React.FC<LoginViewProps> = ({ users, onLoginSuccess }) => {
+export const LoginView: React.FC<LoginViewProps> = ({ users, onLoginSuccess, onUpdateUserPassword }) => {
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -151,27 +153,39 @@ export const LoginView: React.FC<LoginViewProps> = ({ users, onLoginSuccess }) =
     }
 
     if (targetUserForReset) {
-      targetUserForReset.password = newPassword.trim();
-      // Atualiza também no localStorage
+      const updatedPassword = newPassword.trim();
+      targetUserForReset.password = updatedPassword;
+
+      // 1. Notifica o componente pai para atualizar estado e salvar no Supabase
+      if (onUpdateUserPassword) {
+        onUpdateUserPassword(targetUserForReset.id, updatedPassword);
+      } else {
+        syncUserToRemote({ ...targetUserForReset, password: updatedPassword });
+      }
+
+      // 2. Atualiza nas chaves de localStorage
       try {
-        const stored = localStorage.getItem('combustivel_usuarios_v2');
-        if (stored) {
-          const parsed: AppUser[] = JSON.parse(stored);
-          const updated = parsed.map((u) =>
-            u.id === targetUserForReset.id ? { ...u, password: newPassword.trim() } : u
-          );
-          localStorage.setItem('combustivel_usuarios_v2', JSON.stringify(updated));
+        const keys = ['combustivel_usuarios_v3', 'combustivel_usuarios_v2'];
+        for (const k of keys) {
+          const stored = localStorage.getItem(k);
+          if (stored) {
+            const parsed: AppUser[] = JSON.parse(stored);
+            const updated = parsed.map((u) =>
+              u.id === targetUserForReset.id ? { ...u, password: updatedPassword } : u
+            );
+            localStorage.setItem(k, JSON.stringify(updated));
+          }
         }
       } catch (err) {
-        console.error(err);
+        console.error('Erro ao atualizar senha local:', err);
       }
 
       setResetStep('request');
       setIsForgotModalOpen(false);
-      setPassword(newPassword.trim());
+      setPassword(updatedPassword);
       setCpf(targetUserForReset.cpf || cpf);
       setError('');
-      alert(`Senha redefinida com sucesso para o usuário ${targetUserForReset.name}!`);
+      alert(`Senha redefinida com sucesso para o usuário ${targetUserForReset.name}! Sincronizada com o Supabase.`);
     }
   };
 
