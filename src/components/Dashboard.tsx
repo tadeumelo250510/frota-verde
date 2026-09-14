@@ -7,7 +7,7 @@ import {
 } from '../types';
 import { formatCurrency, formatNumber } from '../utils/calculations';
 import { LicensePlateBadge } from './LicensePlateBadge';
-import { Trophy, Fuel } from 'lucide-react';
+import { Trophy, Fuel, Gauge } from 'lucide-react';
 
 interface DashboardProps {
   vehicles: Vehicle[];
@@ -268,15 +268,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
     });
   }, [filteredRecords, vehicleMap]);
 
-  // Ranking de Veículos: TODOS os veículos cadastrados somando Abastecimentos e Valores (1°, 2°, 3°, 4°...)
+  // Ranking de Veículos: TODOS os veículos cadastrados somando Abastecimentos, Litros, Gastos e KM Total Percorrido
   const vehicleRanking = useMemo(() => {
     const vehicleStatsMap: {
       [key: string]: {
         refuelsCount: number;
         totalSpent: number;
         totalLiters: number;
+        totalKm: number;
       };
     } = {};
+
+    // Mapear também km das estatísticas consolidadas se disponível
+    const efficiencyMap = new Map<string, VehicleEfficiencyStats>();
+    efficiencyStats.forEach((s) => efficiencyMap.set(s.vehicleId, s));
 
     filteredRecords.forEach((rec) => {
       if (!vehicleStatsMap[rec.vehicleId]) {
@@ -284,11 +289,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
           refuelsCount: 0,
           totalSpent: 0,
           totalLiters: 0,
+          totalKm: 0,
         };
       }
       vehicleStatsMap[rec.vehicleId].refuelsCount += 1;
       vehicleStatsMap[rec.vehicleId].totalSpent += rec.totalCost;
       vehicleStatsMap[rec.vehicleId].totalLiters += rec.liters;
+    });
+
+    // Somar o KM percorrido real calculado de cada veículo através dos registros enriquecidos
+    filteredEnriched.forEach((rec) => {
+      if (vehicleStatsMap[rec.vehicleId] && rec.kmDrivenSinceLast && rec.kmDrivenSinceLast > 0) {
+        vehicleStatsMap[rec.vehicleId].totalKm += rec.kmDrivenSinceLast;
+      }
     });
 
     const totalAllSpent = Object.values(vehicleStatsMap).reduce(
@@ -302,7 +315,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
         refuelsCount: 0,
         totalSpent: 0,
         totalLiters: 0,
+        totalKm: 0,
       };
+
+      // Se o totalKm ainda for 0 mas houver estatística consolidada com KM maior que zero, utilizar
+      let vehicleTotalKm = stats.totalKm;
+      if (vehicleTotalKm === 0 && selectedVehicleId === 'all') {
+        const eff = efficiencyMap.get(v.id);
+        if (eff && eff.totalKm > 0) {
+          vehicleTotalKm = eff.totalKm;
+        }
+      }
+
       const pct = totalAllSpent > 0 ? (stats.totalSpent / totalAllSpent) * 100 : 0;
       return {
         vehicleId: v.id,
@@ -315,6 +339,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         refuelsCount: stats.refuelsCount,
         totalSpent: stats.totalSpent,
         totalLiters: stats.totalLiters,
+        totalKm: vehicleTotalKm,
         percentage: pct,
       };
     });
@@ -331,11 +356,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
     });
 
     return ranking;
-  }, [vehicles, filteredRecords]);
+  }, [vehicles, filteredRecords, filteredEnriched, efficiencyStats, selectedVehicleId]);
 
   // Total de abastecimentos somados no ranking
   const totalRefuelsInRanking = useMemo(() => {
     return vehicleRanking.reduce((acc, item) => acc + item.refuelsCount, 0);
+  }, [vehicleRanking]);
+
+  // Total de KM percorrido somado no ranking
+  const totalKmInRanking = useMemo(() => {
+    return vehicleRanking.reduce((acc, item) => acc + item.totalKm, 0);
   }, [vehicleRanking]);
 
   return (
@@ -471,6 +501,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <th className="py-3 px-2 sm:px-3 text-center w-14 sm:w-16">Posição</th>
                 <th className="py-3 px-3 sm:px-4">Veículo</th>
                 <th className="py-3 px-2 sm:px-3 text-center w-28 sm:w-36">Abastecimentos</th>
+                <th className="py-3 px-2 sm:px-3 text-right w-28 sm:w-36">KM Percorrido</th>
                 <th className="py-3 px-2 sm:px-3 text-right w-24 sm:w-32">Volume Total</th>
                 <th className="py-3 px-3 sm:px-4 text-right w-36 sm:w-48">Gasto Total (R$)</th>
               </tr>
@@ -479,7 +510,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               {vehicleRanking.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="py-8 text-center text-xs text-slate-400"
                   >
                     Nenhum veículo cadastrado na frota
@@ -539,6 +570,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           {item.refuelsCount} {item.refuelsCount === 1 ? 'abastecimento' : 'abastecimentos'}
                         </span>
                       </td>
+                      <td className="py-3 px-2 sm:px-3 text-right whitespace-nowrap">
+                        <span className="font-bold text-slate-800 text-xs sm:text-sm font-mono">
+                          {item.totalKm.toLocaleString('pt-BR')} km
+                        </span>
+                      </td>
                       <td className="py-3 px-2 sm:px-3 text-right font-medium text-slate-700 whitespace-nowrap">
                         {formatNumber(item.totalLiters, 1)} L
                       </td>
@@ -562,7 +598,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {vehicleRanking.length > 0 && (
           <div className="mt-3.5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2 px-1">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span>
                 Total de carros: <strong>{vehicleRanking.length}</strong>
               </span>
@@ -570,6 +606,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <span>
                 Abastecimentos somados:{' '}
                 <strong>{totalRefuelsInRanking}</strong>
+              </span>
+              <span>•</span>
+              <span>
+                KM Total da Frota:{' '}
+                <strong className="text-slate-700">{totalKmInRanking.toLocaleString('pt-BR')} km</strong>
               </span>
             </div>
             <span className="font-bold text-slate-800 text-xs sm:text-sm">
